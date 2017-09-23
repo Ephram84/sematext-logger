@@ -25,7 +25,7 @@ func TestServer(t *testing.T) {
 	ok, err := logger.Err("An error has occurred", "path:/api/example/err")
 	check(t, ok, err)
 
-	ok, err := logger.Info("test message", "Methode:GET", "uri:/api/test/info")
+	ok, err = logger.Info("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, ok, err)
 
 	ok, err = logger.Debug("test message", "@timestamp:"+time.Now().String())
