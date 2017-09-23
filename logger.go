@@ -3,107 +3,73 @@ package sematextlogger
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"os"
+	"strings"
 )
 
-// WinLogger is a writer to sematext server.
+// Logger is a writer to sematext server.
 type Logger struct {
 	AppToken string
 	Type     string
 	Host     string
 	URL      string
-	Keys     []string
 }
 
 // NewLogger returns a logger
-func NewLogger(appToken, typ, url string, keys ...string) *Logger {
+func NewLogger(appToken string) *Logger {
 	host, _ := os.Hostname()
-	if typ == "" {
-		typ = "syslog"
-	}
-	if url == "" {
-		url = "http://logsene-receiver.sematext.com:80"
-	}
-	return &Logger{AppToken: appToken, Type: typ, Host: host, URL: url, Keys: keys}
+	typ := "syslog"
+	url := "http://logsene-receiver.sematext.com:80"
+	return &Logger{AppToken: appToken, Type: typ, Host: host, URL: url}
 }
 
-// NewKeys sets or replaces all keys.
-func (logger *Logger) NewKeys(newkeys ...string) {
-	logger.Keys = newkeys
+func (logger *Logger) WithType(t string) *Logger {
+	logger.Type = t
+	return logger
 }
 
-// AddKey adds a new key, except it already exists.
-func (logger *Logger) AddKey(key string) error {
-	pos := findPosition(logger.Keys, key)
-	if pos < 0 {
-		logger.Keys = append(logger.Keys, key)
-	} else {
-		return errors.New(key + " already exists")
-	}
-	return nil
-}
-
-// RemoveKey removes <key> if it exists.
-func (logger *Logger) RemoveKey(key string) error {
-	pos := findPosition(logger.Keys, key)
-	if pos >= 0 {
-		logger.Keys = append(logger.Keys[:pos], logger.Keys[pos+1:]...)
-	} else {
-		return errors.New(key + " has not been found")
-	}
-	return nil
-}
-
-func findPosition(keys []string, key string) int {
-	for i, k := range keys {
-		if k == key {
-			return i
-		}
-	}
-	return -1
+func (logger *Logger) WithURL(url string) *Logger {
+	logger.URL = url
+	return logger
 }
 
 // Err logs a message with severity "err".
-func (logger *Logger) Err(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("err", msg, values)
+func (logger *Logger) Err(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("err", msg, additional)
 }
 
 // Info logs a message with severity "info".
-func (logger *Logger) Info(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("info", msg, values)
+func (logger *Logger) Info(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("info", msg, additional)
 }
 
 // Emerg logs a message with severity "emerg".
-func (logger *Logger) Emerg(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("emerg", msg, values)
+func (logger *Logger) Emerg(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("emerg", msg, additional)
 }
 
 // Crit logs a message with severity "crit".
-func (logger *Logger) Crit(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("crit", msg, values)
+func (logger *Logger) Crit(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("crit", msg, additional)
 }
 
 // Warning logs a message with severity "warning".
-func (logger *Logger) Warning(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("warning", msg, values)
+func (logger *Logger) Warning(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("warning", msg, additional)
 }
 
 // Notice logs a message with severity "notice".
-func (logger *Logger) Notice(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("notice", msg, values)
+func (logger *Logger) Notice(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("notice", msg, additional)
 }
 
 // Debug logs a message with severity "debug".
-func (logger *Logger) Debug(msg string, values ...interface{}) (bool, error) {
-	return logger.buildMessage("debug", msg, values)
+func (logger *Logger) Debug(msg string, additional ...string) (bool, error) {
+	return logger.buildMessage("debug", msg, additional)
 }
 
-func (logger *Logger) buildMessage(severity, msg string, values []interface{}) (bool, error) {
-	if len(logger.Keys) != len(values) {
-		return false, errors.New("Size of keys and values are odd")
-	}
+func (logger *Logger) buildMessage(severity, msg string, additional []string) (bool, error) {
 	var message map[string]interface{}
 	message = make(map[string]interface{})
 
@@ -111,11 +77,29 @@ func (logger *Logger) buildMessage(severity, msg string, values []interface{}) (
 	message["Message"] = msg
 	message["Host"] = logger.Host
 
-	for i, key := range logger.Keys {
-		message[key] = values[i]
+	for _, keyvalue := range additional {
+		parts := strings.Split(keyvalue, ":")
+		switch len(parts) {
+		case 1:
+			message["?"] = parts[0]
+		case 2:
+			message[parts[0]] = parts[1]
+		default:
+			value := parts[1]
+			for _, part := range parts[2:] {
+				value += ":" + part
+			}
+			message[parts[0]] = value
+		}
+		// if len(parts) == 2 {
+		// 	message[parts[0]] = parts[1]
+		// }
 	}
 
-	jmsg, _ := json.Marshal(message)
+	jmsg, err := json.Marshal(message)
+	if err != nil {
+		return false, err
+	}
 	return logger.sendMessage(jmsg)
 }
 
@@ -127,8 +111,8 @@ func (logger *Logger) sendMessage(msg []byte) (bool, error) {
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode != 200 {
+	_, err = client.Do(req)
+	if err != nil {
 		return false, err
 	}
 
