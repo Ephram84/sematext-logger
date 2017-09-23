@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,26 +20,27 @@ func TestServer(t *testing.T) {
 	ts := httptest.NewServer(getHandler())
 	defer ts.Close()
 
-	logger := sematextlogger.NewLogger(appToken, typ, ts.URL, "method", "path")
+	logger := sematextlogger.NewLogger(appToken).WithType(typ).WithURL(ts.URL)
 
-	ok, err := logger.Info("test message", "GET", "/api/test/info")
+	ok, err := logger.Err("An error has occurred", "path:/api/example/err")
 	check(t, ok, err)
 
-	logger.NewKeys("time")
-	ok, err = logger.Debug("test message", time.Now())
+	ok, err = logger.Info("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, ok, err)
 
-	logger.NewKeys("method", "path")
-	ok, err = logger.Warning("test message", "GET", "/api/test/warning")
+	ok, err = logger.Debug("test message", "@timestamp:"+time.Now().String())
 	check(t, ok, err)
 
-	ok, err = logger.Notice("test message", "GET", "/api/test/notice")
+	ok, err = logger.Warning("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, ok, err)
 
-	ok, err = logger.Crit("test message", "GET", "/api/test/crit")
+	ok, err = logger.Notice("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, ok, err)
 
-	ok, err = logger.Emerg("test message", "GET", "/api/test/emerg")
+	ok, err = logger.Crit("test message", "Methode:GET", "uri:/api/test/info")
+	check(t, ok, err)
+
+	ok, err = logger.Emerg("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, ok, err)
 }
 
@@ -82,56 +82,4 @@ func handleMessage(context echo.Context) error {
 	fmt.Println()
 
 	return context.JSON(http.StatusOK, "OK")
-}
-
-func TestAddKey(t *testing.T) {
-	logger := sematextlogger.NewLogger(appToken, typ, "")
-
-	if len(logger.Keys) > 0 {
-		t.Fail()
-	}
-
-	err := logger.AddKey("testkey")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = logger.AddKey("testkey")
-	if err == nil {
-		t.Fatal("logger should have found the key")
-	}
-}
-
-func TestRemoveKey(t *testing.T) {
-	logger := sematextlogger.NewLogger(appToken, typ, "", "testkey1", "testkey2")
-
-	if len(logger.Keys) != 2 {
-		t.Fatal("Something went wrong")
-	}
-
-	err := logger.RemoveKey("testkey2")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(logger.Keys) != 1 {
-		t.Fatal("Removing testkey2 was not successful")
-	}
-
-	err = logger.RemoveKey("testkey2")
-	if err == nil {
-		t.Fatal("logger should have removed testkey2")
-	}
-	log.Println(err)
-
-	err = logger.RemoveKey("testkey1")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = logger.RemoveKey("testkey1")
-	if err == nil {
-		t.Fatal("logger should have removed testkey1")
-	}
-	log.Println(err)
 }
