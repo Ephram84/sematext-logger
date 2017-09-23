@@ -1,5 +1,7 @@
 # SEMATEXT-LOGGER
 
+[![Build Status](https://travis-ci.org/Ephram84/sematext-logger.svg?branch=master)](https://travis-ci.org/Ephram84/sematext-logger)
+
 With sematext-logger, log events can be send to [Sematext](https://sematext.com/).
 
 ## Install
@@ -22,3 +24,6 @@ For example, the following code
 logger.Err("An error has occurred")
 ```
 
+then produces this output on sematext
+![alt text][pic1]
+[pic1]: https://github.com//Ephram84/sematext-logger/pictures/Sematext_err.PNG
