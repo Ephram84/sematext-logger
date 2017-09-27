@@ -18,11 +18,20 @@ Parameter:
 * url (string, optional): If url is not set, all messages are sent to http://logsene-receiver.sematext.com:80. With <code>WithURL(any URL)</code>, you can specify your own URL.
 
 ### Send message
-Logger can now be used to call different methods that specify different severities.
+logger can now be used to call different methods that specify different severities.
 For example, the following code
 ```golang
 logger.Err("An error has occurred")
 ```
 
-then produces this output on sematext
+then produces this output on sematext</br>
 ![](pictures/Sematext_err.PNG?raw=true)
+
+### Additional information
+If you want to send further information, apart from the message, you can add by adding strings in the 'key:value' format of the corresponding method.
+For example
+```golang
+logger.Err("An error has occurred", "path:/api/example/err")
+```
+looks like on sematext</br>
+![](pictures/Sematext_err2.PNG?raw=true)
