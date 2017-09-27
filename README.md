@@ -25,4 +25,4 @@ logger.Err("An error has occurred")
 ```
 
 then produces this output on sematext
-![Image of sematext](https://github.com//Ephram84/sematext-logger/tree/master/pictures/Sematext_err.PNG)
+![](https://github.com//Ephram84/sematext-logger/tree/master/pictures/Sematext_err.PNG?raw=true)
