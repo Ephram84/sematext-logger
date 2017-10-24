@@ -28,7 +28,7 @@ then produces this output on sematext</br>
 ![](pictures/Sematext_err.PNG?raw=true)
 
 ### Additional information
-If you want to send further information, apart from the message, you can add by adding strings in the 'key:value' format of the corresponding method.
+If you want to send further information, apart from the message, you can add by adding several strings in the 'key:value' format of the corresponding method.
 For example
 ```golang
 logger.Err("An error has occurred", "path:/api/example/err")
