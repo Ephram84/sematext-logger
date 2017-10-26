@@ -2,11 +2,9 @@ package test
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"regexp"
 	"testing"
 	"time"
 
@@ -31,7 +29,7 @@ func TestServer(t *testing.T) {
 	err = logger.Info("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, err)
 
-	err = logger.Info("test message", "GET")
+	err = logger.Info("test message", "GET", "XYZ")
 	check(t, err)
 
 	err = logger.Debug("test message", "@timestamp:"+time.Now().String())
@@ -51,23 +49,6 @@ func TestServer(t *testing.T) {
 
 	err = logger.Emerg("test message", "Methode:GET", "uri:/api/test/info")
 	check(t, err)
-}
-
-func TestTime(t *testing.T) {
-	data := time.Now().UTC().String()
-
-	log.Println("now:", data)
-
-	r, err := regexp.Compile("\\d{4}-\\d{2}-\\d{2}(T| )\\d{2}:\\d{2}:\\d{2}")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(r.MatchString(data))
-
-	dateTime := r.FindString(data)
-
-	fmt.Println("dateTime: ", dateTime)
 }
 
 func TestServerWithEnv(t *testing.T) {

@@ -93,32 +93,46 @@ func (logger *Logger) buildMessage(severity, msg string, additional []string) er
 	var message map[string]interface{}
 	message = make(map[string]interface{})
 
+	unknown := make([]string, 0)
+
 	message["Severity"] = severity
 	message["Message"] = msg
 	message["Host"] = logger.Host
 
 	for _, keyvalue := range additional {
-		r, _ := regexp.Compile("\\d{4}-\\d{2}-\\d{2}(T| )\\d{2}:\\d{2}:\\d{2}")
-		if r.MatchString(keyvalue) {
-			message["?"] = keyvalue
-		} else {
-			parts := strings.Split(keyvalue, ":")
-			switch len(parts) {
-			case 0, 1:
-				message["?"] = parts[0]
-			case 2:
+		if keyvalue == "" {
+			continue
+		}
+		parts := strings.Split(keyvalue, ":")
+		switch len(parts) {
+		case 0, 1:
+			unknown = append(unknown, parts[0])
+		case 2:
+			if parts[0] == "?" {
+				unknown = append(unknown, parts[1])
+			} else {
 				message[parts[0]] = parts[1]
-			default:
+			}
+		default:
+			r, _ := regexp.Compile("\\d{4}-\\d{2}-\\d{2}(T| )\\d{2}")
+			if r.MatchString(parts[0]) {
+				unknown = append(unknown, keyvalue)
+			} else {
 				value := parts[1]
 				for _, part := range parts[2:] {
 					value += ":" + part
 				}
 				message[parts[0]] = value
 			}
-			// if len(parts) == 2 {
-			// 	message[parts[0]] = parts[1]
-			// }
 		}
+	}
+
+	if len(unknown) > 0 {
+		unknownStr := unknown[0] + "\n"
+		for _, str := range unknown[1:] {
+			unknownStr += str + "\n"
+		}
+		message["?"] = unknownStr
 	}
 
 	jmsg, err := json.Marshal(message)
