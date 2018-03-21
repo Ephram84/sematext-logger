@@ -26,7 +26,7 @@ func NewLogger(appToken string) *Logger {
 	return &Logger{AppToken: appToken, Type: typ, Host: host, URL: url}
 }
 
-// InitLogger inits a logger throught an enviroment variable that contains a url,
+// InitLogger inits a logger through an enviroment variable that contains a url,
 // e.g., https://logsene-receiver.sematext.com/fzr64ktn-....
 func InitLogger(envVArName string) *Logger {
 	loggingURL := os.Getenv(envVArName)
