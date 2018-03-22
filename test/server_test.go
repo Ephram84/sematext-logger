@@ -2,12 +2,16 @@ package test
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	sematextlogger "github.com/Ephram84/sematext-logger"
+	"github.com/Ephram84/sematext-logger/logwriter"
 	"github.com/labstack/echo"
 )
 
@@ -82,4 +86,21 @@ func handleMessage(context echo.Context) error {
 	fmt.Println()
 
 	return context.JSON(http.StatusOK, "OK")
+}
+
+func TestDialSematext(t *testing.T) {
+	logger := sematextlogger.NewLogger(appToken)
+
+	ok, err := logger.Err("An error has occurred", "path:/api/example/err")
+	check(t, ok, err)
+}
+
+func TestLogger(t *testing.T) {
+	sematext, _ := logwriter.Dial("udp", "logsene-receiver-syslog.sematext.com:514", logwriter.LOG_LOCAL0, appToken)
+
+	multi := io.MultiWriter(sematext, os.Stdout)
+
+	info := log.New(multi, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	info.Println("An error has occurred")
 }
