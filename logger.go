@@ -1,6 +1,7 @@
 package sematextlogger
 
 import (
+	"errors"
 	"io"
 	"log"
 	"strings"
@@ -14,35 +15,40 @@ import (
 	echoLog "github.com/labstack/gommon/log"
 )
 
+var (
+	errSematextWriterIsNil = errors.New("sematextWriter is nil")
+)
+
 // Logger is a writer to sematext server.
 type Logger struct {
 	sematextWriter *logwriter.Writer
-	prefix         string
+	service        string
+	*echoLog.Logger
 }
 
 // NewLogger returns a logger
-func NewLogger(appToken, prefix string) (*Logger, error) {
+func NewLogger(appToken, service string) (*Logger, error) {
 	sematext, err := logwriter.Dial("udp", "logsene-receiver-syslog.sematext.com:514", logwriter.LOG_LOCAL0, appToken)
 	if err != nil {
 		return &Logger{sematextWriter: nil}, err
 	}
-	echoLog.SetOutput(io.MultiWriter(sematext, os.Stdout))
-	echoLog.SetHeader(`{"time":"${time_rfc3339_nano}","request_id":"${id}","remote_ip":"${remote_ip}","host":"${host}",` +
-		`"method":"${method}","uri":"${uri}","status":${status}, "latency":${latency},` +
-		`"latency_human":"${latency_human}","bytes_in":${bytes_in},` +
-		`"bytes_out":${bytes_out}, "service":"` + prefix + `"}`)
+
+	newLogger := &Logger{sematextWriter: sematext, service: service}
+	newLogger.Logger = echoLog.New(service)
+
+	newLogger.SetOutput(io.MultiWriter(sematext, os.Stdout))
+
+	newLogger.SetHeader(`{"time":"${time_rfc3339}","loglevel":"${level}","service":"${prefix}",` +
+		`"file":"${short_file}","line":"${line}"}`)
 
 	// set log level
 	if os.Getenv("ENVIRONMENT") == "dev" {
-		echoLog.SetLevel(echoLog.DEBUG)
+		newLogger.SetLevel(echoLog.DEBUG)
 	} else {
-		echoLog.SetLevel(echoLog.INFO)
+		newLogger.SetLevel(echoLog.INFO)
 	}
 
-	// set prefix
-	echoLog.SetPrefix(prefix)
-
-	return &Logger{sematextWriter: sematext, prefix: prefix}, nil
+	return newLogger, nil
 }
 
 // InitLogger inits a logger through an enviroment variable that contains a url,
@@ -61,51 +67,52 @@ func InitLogger(envVArName, prefix string) (*Logger, error) {
 	return NewLogger(appToken, prefix)
 }
 
-func EchoMiddlwareLogger(logger *Logger) echo.MiddlewareFunc {
+func (logger *Logger) EchoMiddlwareLogger() echo.MiddlewareFunc {
 	if logger.sematextWriter == nil {
 		log.Println("sematextWriter is nil")
 		return nil
 	}
 
 	return middleware.LoggerWithConfig(middleware.LoggerConfig{Output: io.MultiWriter(os.Stdout, logger.sematextWriter),
-		Format: `{"time":"${time_rfc3339_nano}","request_id":"${id}","remote_ip":"${remote_ip}","host":"${host}",` +
-			`"method":"${method}","uri":"${uri}","status":${status}, "latency":${latency},` +
-			`"latency_human":"${latency_human}","bytes_in":${bytes_in},` +
-			`"bytes_out":${bytes_out}, "service":"` + logger.prefix + `"}` + "\n"})
+		Format: `{"time":"${time_rfc3339_nano}", "request_id":"${id}", "remote_ip":"${remote_ip}", "host":"${host}",` +
+			` "method":"${method}", "uri":"${uri}", "status":${status}, "latency":${latency},` +
+			` "latency_human":"${latency_human}", "bytes_in":${bytes_in},` +
+			` "bytes_out":${bytes_out}, "service":"` + logger.service + `"}` + "\n"})
 }
 
 // Err logs a message with severity "err".
-func (logger *Logger) Err(msg string) {
+func (logger *Logger) Err(msg string) error {
 	if logger.sematextWriter == nil {
 		log.Println("sematextWriter is nil")
-		return
+		return errSematextWriterIsNil
 	}
-	echoLog.Error(msg)
+
+	return logger.sematextWriter.Err(msg)
 }
 
 // Info logs a message with severity "info".
-func (logger *Logger) Info(msg string) {
+func (logger *Logger) Info(msg string) error {
 	if logger.sematextWriter == nil {
 		log.Println("sematextWriter is nil")
-		return
+		return errSematextWriterIsNil
 	}
-	echoLog.Info(msg)
+	return logger.sematextWriter.Info(msg)
 }
 
 // Warning logs a message with severity "warning".
-func (logger *Logger) Warning(msg string) {
+func (logger *Logger) Warning(msg string) error {
 	if logger.sematextWriter == nil {
 		log.Println("sematextWriter is nil")
-		return
+		return errSematextWriterIsNil
 	}
-	echoLog.Warn(msg)
+	return logger.sematextWriter.Warning(msg)
 }
 
 // Debug logs a message with severity "debug".
-func (logger *Logger) Debug(msg string) {
+func (logger *Logger) Debug(msg string) error {
 	if logger.sematextWriter == nil {
 		log.Println("sematextWriter is nil")
-		return
+		return errSematextWriterIsNil
 	}
-	echoLog.Warn(msg)
+	return logger.sematextWriter.Debug(msg)
 }
