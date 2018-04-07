@@ -5,23 +5,21 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	sematextlogger "github.com/Ephram84/sematext-logger"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
 
-type TestConext struct {
+type TestContext struct {
 	echo.Context
 	Sematextlogger *sematextlogger.Logger
 }
 
 func GetAPI() *echo.Echo {
 
-	logger, err := sematextlogger.NewLogger("3cb2be30-05c6-45d6-bdc9-075cac545206", "test")
-	if err != nil {
-		panic(err)
-	}
+	logger := sematextlogger.NewLogger(os.Getenv("LOGGING_URL"), "test")
 
 	router := echo.New()
 	router.HideBanner = true
@@ -30,7 +28,7 @@ func GetAPI() *echo.Echo {
 	router.Use(middleware.RequestID())
 	router.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			tcontext := &TestConext{c, logger}
+			tcontext := &TestContext{c, logger}
 			return h(tcontext)
 		}
 	})
@@ -41,11 +39,13 @@ func GetAPI() *echo.Echo {
 }
 
 func handleMessage(c echo.Context) error {
-	context := c.(*TestConext)
+	context := c.(*TestContext)
+
+	context.Sematextlogger.Info("handleMessage")
 
 	isError := context.QueryParam("isError")
 	if isError == "true" {
-		context.Sematextlogger.Error("An error has occurred", " - ", errors.New("Example error").Error())
+		context.Sematextlogger.Error(context.Response().Header().Get(echo.HeaderXRequestID), "An error has occurred", " - ", errors.New("Example error").Error())
 		return context.JSON(http.StatusConflict, "An error has occurred")
 	}
 

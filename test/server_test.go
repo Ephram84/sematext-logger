@@ -29,10 +29,7 @@ func TestServer(t *testing.T) {
 }
 
 func TestDialSematext(t *testing.T) {
-	logger, err := sematextlogger.NewLogger(appToken, "test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	logger := sematextlogger.NewLogger(appToken, "test")
 
 	// logger.Err("An error has occurred")
 	logger.Info("Info")
