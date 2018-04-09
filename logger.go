@@ -154,14 +154,14 @@ func (l *Logger) SetHeader(h string) {
 
 func (logger *Logger) EchoMiddlwareLogger() echo.MiddlewareFunc {
 	var output io.Writer
-	if logger.SematextWriter == nil {
+	if logger.SematextWriter != nil {
 		output = io.MultiWriter(os.Stdout, logger.SematextWriter)
 	} else {
 		output = os.Stdout
 	}
 
 	return middleware.LoggerWithConfig(middleware.LoggerConfig{Output: output,
-		Format: `{"time":"${time_rfc3339_nano}", "request_id":"${id}", "remote_ip":"${remote_ip}", "host":"${host}",` +
+		Format: `{"time":"${time_rfc3339}", "request_id":"${id}", "remote_ip":"${remote_ip}", "host":"${host}",` +
 			` "method":"${method}", "uri":"${uri}", "status":${status}, "latency":${latency},` +
 			` "latency_human":"${latency_human}", "bytes_in":${bytes_in},` +
 			` "bytes_out":${bytes_out}, "service":"` + logger.service + `"}` + "\n"})
@@ -181,7 +181,7 @@ func (logger *Logger) EchoMiddlwareLogger() echo.MiddlewareFunc {
 
 func (l *Logger) Debug(id string, i ...interface{}) {
 	i = append(i, id)
-	l.log(DEBUG, "", i...)
+	l.log(DEBUG, "id", i...)
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
@@ -194,7 +194,7 @@ func (l *Logger) Debugj(j JSON) {
 
 func (l *Logger) Info(id string, i ...interface{}) {
 	i = append(i, id)
-	l.log(INFO, "", i...)
+	l.log(INFO, "id", i...)
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
@@ -207,7 +207,7 @@ func (l *Logger) Infoj(j JSON) {
 
 func (l *Logger) Warn(id string, i ...interface{}) {
 	i = append(i, id)
-	l.log(WARN, "", i...)
+	l.log(WARN, "id", i...)
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {

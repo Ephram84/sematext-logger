@@ -13,7 +13,6 @@ import (
 
 const (
 	appToken string = "3cb2be30-05c6-45d6-bdc9-075cac545206"
-	typ      string = "syslog"
 )
 
 func TestServer(t *testing.T) {
@@ -43,4 +42,8 @@ func TestLogger(t *testing.T) {
 	info := log.New(multi, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	info.Println("An error has occurred")
+}
+
+func TestEnv(t *testing.T) {
+	println(os.Getenv("LOGGING_URL"))
 }

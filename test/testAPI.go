@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	sematextlogger "github.com/Ephram84/sematext-logger"
 	"github.com/labstack/echo"
@@ -19,7 +18,7 @@ type TestContext struct {
 
 func GetAPI() *echo.Echo {
 
-	logger := sematextlogger.NewLogger(os.Getenv("LOGGING_URL"), "test")
+	logger := sematextlogger.InitLogger("LOGGING_URL", "test")
 
 	router := echo.New()
 	router.HideBanner = true
@@ -41,7 +40,7 @@ func GetAPI() *echo.Echo {
 func handleMessage(c echo.Context) error {
 	context := c.(*TestContext)
 
-	context.Sematextlogger.Info("handleMessage")
+	context.Sematextlogger.Info(context.Response().Header().Get(echo.HeaderXRequestID), "handleMessage")
 
 	isError := context.QueryParam("isError")
 	if isError == "true" {
