@@ -65,9 +65,6 @@ var (
 // NewLogger returns a logger
 func NewLogger(appToken, service string) *Logger {
 	sematext, err := logwriter.Dial("udp", "logsene-receiver-syslog.sematext.com:514", logwriter.LOG_LOCAL0, appToken)
-	// if err != nil {
-	// 	return &Logger{SematextWriter: nil}, err
-	// }
 
 	if service == "" {
 		service = "syslog"
@@ -108,7 +105,7 @@ func InitLogger(envVArName, service string) *Logger {
 	loggingURL := os.Getenv(envVArName)
 	appToken := ""
 	if loggingURL != "" {
-		log.Println("found", envVArName, ": ", loggingURL)
+		log.Println("found", loggingURL)
 		appToken = strings.Replace(loggingURL, "https://logsene-receiver.sematext.com/", "", -1)
 		appToken = strings.Replace(appToken, "/", "", -1)
 	} else {
