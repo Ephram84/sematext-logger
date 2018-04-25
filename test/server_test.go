@@ -20,9 +20,11 @@ func TestServer(t *testing.T) {
 	defer ts.Close()
 
 	answer, _, err := SendRequest("GET", ts.URL+"/testRoute?isError=true", nil, nil)
+
 	if err != nil {
 		t.Fatal(err)
 	}
+
 
 	println(string(answer))
 }

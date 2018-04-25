@@ -24,6 +24,7 @@ logger := sematextlogger.InitLogger(envVarName, service)
 Logger can now be used to call different methods that specify different severities.
 For example, the following code
 ```golang
+
 logger.Error("any ID", "An error has occurred", "-", errors.New("Example error").Error())
 ```
 produces this output
