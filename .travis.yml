@@ -3,6 +3,7 @@ go:
     - 1.8
 
 env:
+    global:
     - appToken=
     - LOGGING_URL=https://logsene-receiver.sematext.com/
 
