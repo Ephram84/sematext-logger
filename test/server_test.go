@@ -1,26 +1,30 @@
 package test
 
 import (
-	"fmt"
-	"net/http"
+	"io"
+	"log"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	sematextlogger "github.com/Ephram84/sematext-logger"
-	"github.com/labstack/echo"
+	"github.com/Ephram84/sematext-logger/logwriter"
 )
 
 const (
+<<<<<<< HEAD
 	appToken string = "430fv34u-05c6-45d6-bdc9-634dgez"
 	typ      string = "syslog"
+=======
+	appToken string = "3cb2be30-05c6-45d6-bdc9-075cac545206"
+>>>>>>> syslog
 )
 
 func TestServer(t *testing.T) {
-	ts := httptest.NewServer(getHandler())
+	ts := httptest.NewServer(GetAPI())
 	defer ts.Close()
 
+<<<<<<< HEAD
 	logger := sematextlogger.NewLogger(appToken).WithType(typ).WithURL(ts.URL)
 
 	err := logger.Err("An error has occurred", "path:/api/example/err")
@@ -65,9 +69,13 @@ func TestServerWithEnv(t *testing.T) {
 }
 
 func check(t *testing.T, err error) {
+=======
+	answer, _, err := SendRequest("GET", ts.URL+"/testRoute?isError=true", nil, nil)
+>>>>>>> syslog
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
+<<<<<<< HEAD
 }
 
 //////////////////////////////////////
@@ -75,31 +83,29 @@ func check(t *testing.T, err error) {
 //////////////////////////////////////
 func getHandler() *echo.Echo {
 	e := echo.New()
+=======
 
-	e.POST("/"+appToken+"/"+typ, handleMessage)
+	println(string(answer))
+}
+>>>>>>> syslog
 
-	return e
+func TestDialSematext(t *testing.T) {
+	logger := sematextlogger.NewLogger(appToken, "test")
+
+	// logger.Err("An error has occurred")
+	logger.Info("Info")
 }
 
-func handleMessage(context echo.Context) error {
-	var msg map[string]string
-	msg = make(map[string]string)
-	if err := context.Bind(&msg); err != nil {
-		fmt.Println(err)
-		return context.JSON(http.StatusInternalServerError, err)
-	}
+func TestLogger(t *testing.T) {
+	sematext, _ := logwriter.Dial("udp", "logsene-receiver-syslog.sematext.com:514", logwriter.LOG_LOCAL0, appToken)
 
-	for _, v := range []string{"Host", "Message", "Severity"} {
-		value, ok := msg[v]
-		if !ok || len(value) == 0 {
-			return context.JSON(http.StatusBadRequest, v+" is missing")
-		}
-	}
+	multi := io.MultiWriter(sematext, os.Stdout)
 
-	for key, value := range msg {
-		fmt.Println(key, ":", value)
-	}
-	fmt.Println()
+	info := log.New(multi, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	return context.JSON(http.StatusOK, "OK")
+	info.Println("An error has occurred")
+}
+
+func TestEnv(t *testing.T) {
+	println(os.Getenv("LOGGING_URL"))
 }
