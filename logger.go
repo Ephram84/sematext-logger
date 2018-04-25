@@ -3,12 +3,6 @@ package sematextlogger
 import (
 	"bytes"
 	"encoding/json"
-<<<<<<< HEAD
-	"log"
-	"net/http"
-	"os"
-	"regexp"
-=======
 	"errors"
 	"fmt"
 	"io"
@@ -16,7 +10,6 @@ import (
 	"path"
 	"runtime"
 	"strconv"
->>>>>>> syslog
 	"strings"
 	"sync"
 	"time"
