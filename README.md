@@ -31,7 +31,6 @@ produces this output
 ```{"request_id":"65CMp4TVdaZbJUCAJQGLopWsZUPhaKlp","time":"2018-04-07T10:29:15+02:00","loglevel":"ERROR","service":"test","file":"testAPI.go","line":"47","message":"An error has occurred - Example error"}```
 
 Please note that "any ID" is any alphanumeric string, e.g. the RequestID to easily find the message at Sematext. The remaining parameters form the message.
-<<<<<<< HEAD
 
 ## Using Echo
 If you want to implement a REST API with [Echo](https://echo.labstack.com/), process following steps.
