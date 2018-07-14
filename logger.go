@@ -157,7 +157,11 @@ func (logger *Logger) EchoMiddlwareLogger() echo.MiddlewareFunc {
 		output = os.Stdout
 	}
 
-	return middleware.LoggerWithConfig(middleware.LoggerConfig{Output: output,
+	return middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Skipper: func(c echo.Context) bool {
+			return strings.HasSuffix(c.Request().RequestURI, "/ping")
+		},
+		Output: output,
 		Format: `{"time":"${time_rfc3339}", "request_id":"${id}", "remote_ip":"${remote_ip}", "host":"${host}",` +
 			` "method":"${method}", "uri":"${uri}", "status":${status}, "latency":${latency},` +
 			` "latency_human":"${latency_human}", "bytes_in":${bytes_in},` +

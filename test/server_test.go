@@ -12,12 +12,27 @@ func TestServer(t *testing.T) {
 	ts := httptest.NewServer(GetAPI())
 	defer ts.Close()
 
-	answer, _, err := SendRequest("GET", ts.URL+"/testRoute?isError=true", nil, nil)
+	answer, status, err := SendRequest("GET", ts.URL+"/ping", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	println(string(answer))
+
+	if status != 200 {
+		t.Fatalf("Expected errorCode %d, but got %d", 200, status)
+	}
+
+	answer, status, err = SendRequest("GET", ts.URL+"/testRoute?isError=true", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(string(answer))
+
+	if status != 409 {
+		t.Fatalf("Expected errorCode %d, but got %d", 409, status)
+	}
 }
 
 func TestDialSematext(t *testing.T) {

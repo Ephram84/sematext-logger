@@ -32,9 +32,14 @@ func GetAPI() *echo.Echo {
 		}
 	})
 
+	router.GET("ping", ping)
 	router.GET("testRoute", handleMessage)
 
 	return router
+}
+
+func ping(c echo.Context) error {
+	return c.JSON(http.StatusOK, "pong")
 }
 
 func handleMessage(c echo.Context) error {
