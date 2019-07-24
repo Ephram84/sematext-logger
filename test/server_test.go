@@ -2,42 +2,23 @@ package test
 
 import (
 	"net/http/httptest"
-	"os"
 	"testing"
 
-	sematextlogger "github.com/Ephram84/sematext-logger"
+	. "github.com/poy/onpar/expect"
+	. "github.com/poy/onpar/matchers"
 )
 
 func TestServer(t *testing.T) {
 	ts := httptest.NewServer(GetAPI())
 	defer ts.Close()
 
-	answer, status, err := SendRequest("GET", ts.URL+"/ping", nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, status, err := SendRequest("GET", ts.URL+"/testRoute?isError=false", nil, nil)
+	Expect(t, err).To(Not(HaveOccurred()))
 
-	println(string(answer))
+	Expect(t, status).To(Equal(200))
 
-	if status != 200 {
-		t.Fatalf("Expected errorCode %d, but got %d", 200, status)
-	}
+	_, status, err = SendRequest("GET", ts.URL+"/testRoute?isError=true", nil, nil)
+	Expect(t, err).To(Not(HaveOccurred()))
 
-	answer, status, err = SendRequest("GET", ts.URL+"/testRoute?isError=true", nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	println(string(answer))
-
-	if status != 409 {
-		t.Fatalf("Expected errorCode %d, but got %d", 409, status)
-	}
-}
-
-func TestDialSematext(t *testing.T) {
-	logger := sematextlogger.NewLogger(os.Getenv("appToken"), "test")
-
-	// logger.Err("An error has occurred")
-	logger.Info("Info", "It's just a info message")
+	Expect(t, status).To(Equal(409))
 }
