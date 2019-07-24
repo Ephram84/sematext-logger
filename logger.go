@@ -14,14 +14,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	isatty "github.com/mattn/go-isatty"
 	"github.com/valyala/fasttemplate"
 
 	"os"
 
 	"github.com/Ephram84/sematext-logger/logwriter"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/color"
 )
 
